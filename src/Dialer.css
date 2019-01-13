@@ -1,0 +1,16 @@
+.container {
+  -webkit-user-select: none;
+  height: 40px;
+  width: 100%;
+  white-space: nowrap;
+  overflow-x: scroll;
+  font-size: 0;
+  border-image: url("./pointer.png") 100;
+  border-image-width: 0 0 10px 0;
+  border-width:0 0 10px 0;
+  border-bottom: 10px solid black;
+}
+
+.container::-webkit-scrollbar {
+  display: none;
+}
