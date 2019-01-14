@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types'
-import { newDateAction, scrollHourAction } from './actions'
+import { newDateAction, newDateHourAction, scrollHourAction } from './actions'
 import { connect } from 'react-redux'
 import DialerHour from './DialerHour.js'
 import './Dialer.css'
@@ -10,7 +10,7 @@ import { dateChange, dateHourChange, scrollHour } from './ActionConst.js'
 const visibleHours = 11
 const totalHours = visibleHours * 3
 
-class Dialer extends React.Component {
+export class Dialer extends React.Component {
   constructor(props) {
     super(props);
     this.totalCells = this.props.totalHours || totalHours
@@ -47,6 +47,9 @@ class Dialer extends React.Component {
   }
 
   componentDidMount() {
+    window.addEventListener("resize", () => {
+      this.props.changeDateHour(this.state.currentHour)
+    });
     this.centerDialer()
   }
 
@@ -193,8 +196,10 @@ const mapDispatchToProps = function (dispatch, ownProps) {
     },
     scrollHour: (newHour) => {
       dispatch(scrollHourAction(newHour));
+    },
+    changeDateHour: (newHour) => {
+      dispatch(newDateHourAction(newHour));
     }
-
   }
 }
 

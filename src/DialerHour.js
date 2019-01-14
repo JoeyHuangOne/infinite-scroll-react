@@ -32,7 +32,7 @@ export class DialerHour extends React.Component {
 
 DialerHour.propTypes = {
   currentHour: PropTypes.instanceOf(Date).isRequired,
-  cellWidth: PropTypes.string,
+  cellWidth: PropTypes.string.isRequired,
   changeDateHour: PropTypes.func,
 };
 
