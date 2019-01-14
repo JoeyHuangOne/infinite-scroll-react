@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import './App.css';
 import Dialer from "./Dialer.js";
 import { connect } from 'react-redux'
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 class App extends Component {
   render() {
@@ -16,7 +17,7 @@ class App extends Component {
           <p>Scroll, clik, or drag the dialer to change hour.</p>
         </div>
         <Dialer />
-        <p className='alert-warning'>current dialer: {hourStr}</p>
+        <span className='alert-warning'>current dialer: {hourStr}</span>
       </div>
     );
   }

@@ -6,7 +6,6 @@ import { newDateHourAction } from './actions'
 
 export class DialerHour extends React.Component {
   click = event => {
-    console.log('hour click')
     if (this.inDrag) return
     this.props.changeDateHour(this.props.currentHour)
   }

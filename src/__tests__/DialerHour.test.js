@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import { configure } from 'enzyme';
 import Adapter from 'enzyme-adapter-react-16';
-import { shallow, mount, render } from 'enzyme';
+import Enzyme, { shallow, mount, render } from 'enzyme';
 import DialerHour from '../DialerHour';
 
 import rootReducer from '../reducers'
@@ -10,7 +10,7 @@ import { Provider } from 'react-redux'
 import { createStore } from 'redux'
 import { install } from 'redux-loop';
 
-configure({ adapter: new Adapter() });
+Enzyme.configure({ adapter: new Adapter() });
 
 it('renders without crashing', () => {
   const store = createStore(rootReducer, {}, install())
@@ -29,6 +29,10 @@ it('renders hour correctly', () => {
     currentHour={hour} /></Provider>);
   expect(wrapper.text()).toEqual('8')
 });
+
+
+
+
 
 
 

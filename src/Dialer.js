@@ -106,6 +106,15 @@ class Dialer extends React.Component {
     return newHour
   }
 
+  diffHour = (newTime, orgTime) => {
+    let newHour = new Date(newTime)
+    newHour.setHours(newHour.getHours(), 0, 0, 0)
+    let orgHour = new Date(orgTime)
+    orgHour.setHours(orgHour.getHours(), 0, 0, 0)
+    let diff = newHour.valueOf() - orgHour.valueOf()
+    return diff / 3600000
+  }
+
   scroll = event => {
     if (!this.inited) {
       this.inited = true
@@ -113,7 +122,7 @@ class Dialer extends React.Component {
     }
 
     let newHour = this.convertX2Hour(this.dialerRef.current.scrollLeft)
-    let hourDiff = newHour.getHours() - this.orgCurrentHour.getHours()
+    let hourDiff = this.diffHour(newHour, this.orgCurrentHour)
     if (hourDiff > 1 || hourDiff < -1) {
       this.scrollByHour(-hourDiff)
       let newHours = this.fillHours(newHour)
@@ -148,7 +157,7 @@ class Dialer extends React.Component {
       <div>
         <DialerDate currentDate={this.state.currentHour} />
         <p></p>
-        <div className='container' id='container' ref={this.dialerRef}
+        <div className='hourContainer' id='hourContainer' ref={this.dialerRef}
           onMouseMove={this.mouseMove}
           onMouseDown={this.mouseDown}
           onMouseUp={this.mouseUp}

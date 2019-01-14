@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "bootstrap": "^4.2.1",
     "react": "^16.7.0",
     "react-addons-update": "^15.6.2",
     "react-datepicker": "^2.0.0",
