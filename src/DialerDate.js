@@ -9,9 +9,10 @@ class DialerDate extends React.Component {
   constructor(props) {
     super(props);
     this.state = { currentDate: this.props.currentDate || Date.now() };
+    this.handleChange = this.handleChange.bind(this);
   }
 
-  handleChange = (newDate) => {
+  handleChange(newDate) {
     this.props.changeDate(newDate)
     this.setState({
       currentDate: newDate

@@ -22,7 +22,6 @@ class Dialer extends React.Component {
     newDate = this.plusHour(newDate)
     this.state = {
       currentHour: newDate,
-      inScroll: false,
       hours: this.fillHours(newDate)
     };
     this.dialerRef = React.createRef();
@@ -63,21 +62,6 @@ class Dialer extends React.Component {
     return retDate
   }
 
-  renderHours = () => {
-    let hours = []
-    let width = 100 / this.visibleCells + '%'
-    this.state.hours.forEach(hour => {
-      hours.push(
-        <DialerHour
-          key={hour.valueOf()}
-          cellWidth={width}
-          currentHour={hour}
-        />
-      )
-    })
-    return hours
-  }
-
   componentDidUpdate(prevProps) {
     if (!this.props.initDate || prevProps.initDate === this.props.initDate) return
 
@@ -90,6 +74,7 @@ class Dialer extends React.Component {
       let newDate = new Date(this.props.initDate)
       this.setState({ currentHour: newDate, hours: this.fillHours(newDate) })
       this.centerDialer()
+
     } else if (this.props.changeType === scrollHour) {
       let newDate = new Date(this.props.initDate)
       this.setState({ currentHour: newDate })
@@ -134,10 +119,25 @@ class Dialer extends React.Component {
       let newHours = this.fillHours(newHour)
       this.setState({ currentHour: newHour, hours: newHours })
       this.props.scrollHour(newHour)
-    } else if (hourDiff === 1 || hourDiff === -1) {
+    } else {
       this.setState({ currentHour: newHour })
       this.props.scrollHour(newHour)
     }
+  }
+
+  renderHours = () => {
+    let hours = []
+    let width = 100 / this.visibleCells + '%'
+    this.state.hours.forEach(hour => {
+      hours.push(
+        <DialerHour
+          key={hour.valueOf()}
+          cellWidth={width}
+          currentHour={hour}
+        />
+      )
+    })
+    return hours
   }
 
   render() {

@@ -5,7 +5,10 @@ import { connect } from 'react-redux'
 
 class App extends Component {
   render() {
-    let hourStr = this.props.currentHour.toDateString() + ', hour ' + this.props.currentHour.getHours()
+    let hourStr
+    if (this.props.currentHour) {
+      hourStr = this.props.currentHour.toDateString() + ', hour ' + this.props.currentHour.getHours()
+    }
     return (
       <div className="App">
         <div className="jumbotron">
@@ -13,7 +16,7 @@ class App extends Component {
           <p>Scroll, clik, or drag the dialer to change hour.</p>
         </div>
         <Dialer />
-        <p>current dialer: {hourStr}</p>
+        <p className='alert-warning'>current dialer: {hourStr}</p>
       </div>
     );
   }

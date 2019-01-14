@@ -4,16 +4,23 @@ import './DialerHour.css'
 import { connect } from 'react-redux'
 import { newDateHourAction } from './actions'
 
-class DialerHour extends React.Component {
+export class DialerHour extends React.Component {
   click = event => {
-    console.log('click ' + this.props.currentHour)
+    console.log('hour click')
+    if (this.inDrag) return
     this.props.changeDateHour(this.props.currentHour)
+  }
+
+  mouseMove = event => {
+    this.inDrag = event.buttons >= 1
   }
 
   render() {
     let hour = new Date(this.props.currentHour).getHours()
     return (
-      <div onClick={this.click} className={'hourCell'}
+      <div onClick={this.click}
+        className={'hourCell'}
+        onMouseMove={this.mouseMove}
         style={{ width: this.props.cellWidth }}
       >
         <div className='hourText'>
@@ -25,7 +32,7 @@ class DialerHour extends React.Component {
 }
 
 DialerHour.propTypes = {
-  currentHour: PropTypes.instanceOf(Date),
+  currentHour: PropTypes.instanceOf(Date).isRequired,
   cellWidth: PropTypes.string,
   changeDateHour: PropTypes.func,
 };
