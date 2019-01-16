@@ -1,0 +1,144 @@
+<html>
+
+<head>
+  <style>
+    .hourCell {
+      height: 40px;
+      display: inline-block;
+      width: 9.09%;
+      border: 1px solid blue;
+
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    .inner {
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      height: 40px;
+      width: 80%;
+      white-space: nowrap;
+      overflow-x: scroll;
+      font-size: 0;
+      border-bottom: 0px solid red;
+      border-image: url("./pointer.png") 100;
+      border-image-outset: 0 0 0 0;
+      border-width: 0 0 10px 0
+    }
+
+    .inner::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+  <script src="https://code.jquery.com/jquery-3.3.1.js" integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+    crossorigin="anonymous"></script>
+  <script>
+    var m = {}
+    var startBase = 0
+    let hourW = 600 / 11
+    var startLeft = 11 * hourW
+    $(document).ready(() => {
+      console.log($('.inner').width())
+      hourW = $('.inner').width() / 11
+      startLeft = 11 * hourW
+      console.log('init')
+
+      $('.inner').mousedown(e => {
+        if (e.which == 1) {
+          m.scroll = true
+          m.start = e.clientX
+        }
+        console.log(`md ${e.clientX}`)
+      })
+
+      $('.inner').mousemove(e => {
+        console.log('inner move')
+        if (e.which != 1) m.scroll = false
+        if (m.scroll) {
+          $('.inner').get(0).scrollBy(m.start - e.clientX, 0)
+          m.start = e.clientX
+          console.log(`mv ${e.clientX}`)
+        }
+
+      })
+      $('.inner').mouseup(e => {
+        m.scroll = false
+        m.start = e.clientX
+        console.log(`mu ${e.clientX}`)
+      })
+
+      setText(startBase)
+      $('.inner').get(0).scrollBy(startLeft, 0)
+
+      $('.inner').scroll(e => {
+        let left = $('.inner').get(0).scrollLeft
+        console.log(`s ${left}`)
+        if (left > startLeft + hourW) {
+          let scrolled = left - startLeft + hourW
+          let adjust = Math.floor(scrolled / hourW)
+          let newL = left - adjust * hourW
+          startBase += adjust
+          setText(startBase)
+          $('.inner').get(0).scrollBy(-(adjust * hourW), 0)
+        }
+        else if (left < startLeft - hourW) {
+          let scrolled = startLeft + hourW - left
+          let adjust = Math.floor(scrolled / hourW)
+          let newL = left + adjust * hourW
+          startBase -= adjust
+          setText(startBase)
+          $('.inner').get(0).scrollBy(adjust * hourW, 0)
+        }
+      })
+
+      $('.hourCell').click(e => { console.log('click') })
+    })
+    function setText(base) {
+      $('.hourCell').each((idx, ele) => {
+        $(ele).text(base + idx)
+      })
+    }
+  </script>
+</head>
+
+<body>
+
+  <div class='inner' id='continer'>
+    <div class='hourCell'>1</div>
+    <div class='hourCell'>2</div>
+    <div class='hourCell'>3</div>
+    <div class='hourCell'>4</div>
+    <div class='hourCell'>5</div>
+    <div class='hourCell'>6</div>
+    <div class='hourCell'>7</div>
+    <div class='hourCell'>8</div>
+    <div class='hourCell'>9</div>
+    <div class='hourCell'>10</div>
+    <div class='hourCell'>11</div>
+    <div class='hourCell'>12</div>
+    <div class='hourCell'>13</div>
+    <div class='hourCell'>14</div>
+    <div class='hourCell'>4</div>
+    <div class='hourCell'>5</div>
+    <div class='hourCell'>6</div>
+    <div class='hourCell'>7</div>
+    <div class='hourCell'>8</div>
+    <div class='hourCell'>9</div>
+    <div class='hourCell'>10</div>
+    <div class='hourCell'>11</div>
+    <div class='hourCell'>1</div>
+    <div class='hourCell'>2</div>
+    <div class='hourCell'>3</div>
+    <div class='hourCell'>4</div>
+    <div class='hourCell'>5</div>
+    <div class='hourCell'>6</div>
+    <div class='hourCell'>7</div>
+    <div class='hourCell'>8</div>
+    <div class='hourCell'>9</div>
+    <div class='hourCell'>10</div>
+    <div class='hourCell'>11</div>
+  </div>
+
+</body>
+
+</html>
