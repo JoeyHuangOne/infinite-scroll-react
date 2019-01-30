@@ -174,8 +174,9 @@ Dialer.propTypes = {
 
 Dialer.defaultProps = {
   visibleHours: 11,
-  totalHours: 33,
+  totalHours: 55,
 }
+
 const mapStateToProps = function (state) {
   return {
     initDate: state.dateReducer.currentHour,
