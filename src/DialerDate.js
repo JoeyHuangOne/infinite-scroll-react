@@ -5,31 +5,20 @@ import { connect } from 'react-redux'
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 
-class DialerDate extends React.Component {
+class DialerDate extends React.PureComponent {
   constructor(props) {
     super(props);
-    this.state = { currentDate: this.props.currentDate || Date.now() };
     this.handleChange = this.handleChange.bind(this);
   }
 
   handleChange(newDate) {
     this.props.changeDate(newDate)
-    this.setState({
-      currentDate: newDate
-    });
-  }
-
-  componentDidUpdate(prevProps) {
-    if (this.props.currentDate && prevProps.currentDate !== this.props.currentDate) {
-      let newDate = new Date(this.props.currentDate)
-      this.setState({ currentDate: newDate })
-    }
   }
 
   render() {
     return (
       <DatePicker
-        selected={new Date(this.state.currentDate)}
+        selected={new Date(this.props.currentDate)}
         onChange={this.handleChange}
       />
     );

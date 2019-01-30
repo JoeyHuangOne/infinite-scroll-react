@@ -4,7 +4,7 @@ import './DialerHour.css'
 import { connect } from 'react-redux'
 import { newDateHourAction } from './actions'
 
-export class DialerHour extends React.Component {
+export class DialerHour extends React.PureComponent {
   click = event => {
     if (this.inDrag) return
     this.props.changeDateHour(this.props.currentHour)

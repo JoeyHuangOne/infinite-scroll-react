@@ -7,16 +7,12 @@ import './Dialer.css'
 import DialerDate from "./DialerDate.js";
 import { dateChange, dateHourChange, scrollHour } from './ActionConst.js'
 
-const visibleHours = 11
-const totalHours = visibleHours * 3
 
 export class Dialer extends React.Component {
   constructor(props) {
     super(props);
-    this.totalCells = this.props.totalHours || totalHours
-    this.visibleCells = this.props.visibleHours || visibleHours
-    this.start2currentHour = Math.floor(this.totalCells / 2)
-    this.visible2currentHour = Math.floor(this.visibleCells / 2)
+    this.start2currentHour = Math.floor(this.props.totalHours / 2)
+    this.visible2currentHour = Math.floor(this.props.visibleHours / 2)
 
     let newDate = this.props.initDate || new Date(Date.now())
     newDate = this.plusHour(newDate)
@@ -25,7 +21,6 @@ export class Dialer extends React.Component {
       hours: this.fillHours(newDate)
     };
     this.dialerRef = React.createRef();
-    this.inited = false
     this.inDrag = false
   }
 
@@ -34,7 +29,7 @@ export class Dialer extends React.Component {
     this.orgCurrentHour = currentHour
     if (this.dialerRef)
       this.orgScrollLeft = this.dialerRef.current.scrollLeft
-    for (var idx = 0; idx < this.totalCells; idx++) {
+    for (var idx = 0; idx < this.props.totalHours; idx++) {
       let newDate = this.plusHour(currentHour, idx - this.start2currentHour)
       newHours.push(newDate)
     }
@@ -42,7 +37,7 @@ export class Dialer extends React.Component {
   }
 
   scrollByHour = hours => {
-    let hoursWidth = this.dialerRef.current.clientWidth / this.visibleCells * hours
+    let hoursWidth = this.dialerRef.current.clientWidth / this.props.visibleHours * hours
     this.dialerRef.current.scrollLeft += hoursWidth
   }
 
@@ -54,7 +49,7 @@ export class Dialer extends React.Component {
   }
 
   centerDialer = () => {
-    let cellWidth = this.dialerRef.current.clientWidth / this.visibleCells
+    let cellWidth = this.dialerRef.current.clientWidth / this.props.visibleHours
     this.dialerRef.current.scrollLeft = (this.start2currentHour - this.visible2currentHour) * cellWidth
   }
 
@@ -102,8 +97,8 @@ export class Dialer extends React.Component {
   }
 
   convertX2Hour = scrollLeft => {
-    let hourWidth = this.dialerRef.current.clientWidth / this.visibleCells
-    let pointer = hourWidth * (this.visibleCells / 2) + scrollLeft
+    let hourWidth = this.dialerRef.current.clientWidth / this.props.visibleHours
+    let pointer = hourWidth * (this.props.visibleHours / 2) + scrollLeft
     let hourIdx = Math.floor(pointer / hourWidth)
     let newHour = this.state.hours[hourIdx]
     return newHour
@@ -119,11 +114,6 @@ export class Dialer extends React.Component {
   }
 
   scroll = event => {
-    if (!this.inited) {
-      this.inited = true
-      return
-    }
-
     let newHour = this.convertX2Hour(this.dialerRef.current.scrollLeft)
     let hourDiff = this.diffHour(newHour, this.orgCurrentHour)
     if (hourDiff > 1 || hourDiff < -1) {
@@ -139,7 +129,7 @@ export class Dialer extends React.Component {
 
   renderHours = () => {
     let hours = []
-    let width = 100 / this.visibleCells + '%'
+    let width = 100 / this.props.visibleHours + '%'
     this.state.hours.forEach(hour => {
       hours.push(
         <DialerHour
@@ -182,6 +172,10 @@ Dialer.propTypes = {
   changeDate: PropTypes.func,
 };
 
+Dialer.defaultProps = {
+  visibleHours: 11,
+  totalHours: 33,
+}
 const mapStateToProps = function (state) {
   return {
     initDate: state.dateReducer.currentHour,
