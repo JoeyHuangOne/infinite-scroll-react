@@ -60,8 +60,18 @@ export class Dialer extends React.Component {
     return retDate
   }
 
+  sameDayHour = (time1, time2) => {
+    let same = time1.toDateString() === time2.toDateString()
+    same = same && time1.getHours() === time2.getHours()
+    return same
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return !this.sameDayHour(this.props.initDate, nextProps.initDate) || this.props.changeType !== nextProps.changeType
+  }
+
   componentDidUpdate(prevProps) {
-    if (!this.props.initDate || prevProps.initDate === this.props.initDate) return
+    if (!this.props.initDate || (this.sameDayHour(prevProps.initDate, this.props.initDate) && this.props.changeType === prevProps.changeType)) return
 
     if (this.props.changeType === dateChange) {
       let newDate = new Date(this.props.initDate)

@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import './App.css';
 import Dialer from "./Dialer.js";
 import { connect } from 'react-redux'
