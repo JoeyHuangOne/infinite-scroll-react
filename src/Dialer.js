@@ -6,7 +6,6 @@ import DialerHour from './DialerHour.js'
 import './Dialer.css'
 import DialerDate from "./DialerDate.js";
 import { dateChange, dateHourChange, scrollHour, dragEndHour } from './ActionConst.js'
-import * as Rx from 'rxjs/Rx';
 
 export class Dialer extends React.Component {
   constructor(props) {
@@ -45,12 +44,8 @@ export class Dialer extends React.Component {
       this.props.changeDateHour(this.state.currentHour)
     });
     this.centerDialer()
-    this.subscribeScoll()
   }
 
-  componentWillUnmount() {
-    this.unsubscribeScoll()
-  }
 
   centerDialer = () => {
     let cellWidth = this.dialerRef.current.clientWidth / this.props.visibleHours
@@ -141,16 +136,7 @@ export class Dialer extends React.Component {
     return diff / 3600000
   }
 
-  subscribeScoll = () => {
-    //console.log(`ref ${this.dialerRef}`)
-    this.scrollUnsubscribe = Rx.Observable
-      .fromEvent(this.dialerRef.current, 'scroll')
-    //.subscribe(event => console.log(`scroll left ${event.target.scrollLeft}`))
-  }
 
-  unsubscribeScroll = () => {
-    this.scrollUnsubscribe()
-  }
 
   scroll = event => {
     if (this.inDrag) return
