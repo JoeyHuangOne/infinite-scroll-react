@@ -1,12 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types'
-import { newDateAction, newDateHourAction, scrollHourAction } from './actions'
+import { newDateAction, newDateHourAction, scrollHourAction, dragMoveHourAction, dragEndHourAction } from './actions'
 import { connect } from 'react-redux'
 import DialerHour from './DialerHour.js'
 import './Dialer.css'
 import DialerDate from "./DialerDate.js";
-import { dateChange, dateHourChange, scrollHour } from './ActionConst.js'
-
+import { dateChange, dateHourChange, scrollHour, dragEndHour } from './ActionConst.js'
+import * as Rx from 'rxjs/Rx';
 
 export class Dialer extends React.Component {
   constructor(props) {
@@ -26,7 +26,6 @@ export class Dialer extends React.Component {
 
   fillHours = (currentHour) => {
     let newHours = []
-    this.orgCurrentHour = currentHour
     if (this.dialerRef)
       this.orgScrollLeft = this.dialerRef.current.scrollLeft
     for (var idx = 0; idx < this.props.totalHours; idx++) {
@@ -46,6 +45,11 @@ export class Dialer extends React.Component {
       this.props.changeDateHour(this.state.currentHour)
     });
     this.centerDialer()
+    this.subscribeScoll()
+  }
+
+  componentWillUnmount() {
+    this.unsubscribeScoll()
   }
 
   centerDialer = () => {
@@ -82,28 +86,42 @@ export class Dialer extends React.Component {
       let newDate = new Date(this.props.initDate)
       this.setState({ currentHour: newDate, hours: this.fillHours(newDate) })
       this.centerDialer()
-
-    } else if (this.props.changeType === scrollHour) {
+      console.log('center')
+    } else if (this.props.changeType === scrollHour || this.props.changeType === dragEndHour) {
       let newDate = new Date(this.props.initDate)
-      this.setState({ currentHour: newDate })
+      //console.log(`fill hour ${newDate}`)
+      this.setState({ currentHour: newDate, hours: this.fillHours(newDate) })
     }
   }
 
   mouseMove = event => {
     if (event.buttons !== 1) this.inDrag = false
     if (this.inDrag) {
-      this.dialerRef.current.scrollBy(this.dragStartPos - event.clientX, 0)
-      this.dragStartPos = event.clientX
+      let mouseDiff = this.dragStartPosX - event.clientX
+      let scroll = this.dragStartScoll + mouseDiff
+      //console.log(`x sl md s ${event.clientX} ${this.dialerRef.current.scrollLeft} ${mouseDiff} ${scroll}`)
+      this.dialerRef.current.scrollLeft = scroll
+      let newHour = this.convertX2Hour(scroll)
+      this.props.dragMoveHour(newHour)
     }
   }
 
   mouseUp = event => {
+    if (this.inDrag) {
+      let newHour = this.convertX2Hour(this.dialerRef.current.scrollLeft)
+      let hourDiff = this.diffHour(newHour, this.dragStartHour)
+      hourDiff !== 0 && this.scrollByHour(-hourDiff)
+      this.props.dragEndHour(newHour)
+    }
     this.inDrag = false
   }
 
   mouseDown = event => {
     this.inDrag = event.buttons === 1
-    this.dragStartPos = event.clientX
+    this.dragStartHour = this.props.initDate
+    this.dragStartPosX = event.clientX
+    this.dragStartScoll = this.dialerRef.current.scrollLeft
+    //console.log(`mouse/scroll pos ${this.dragStartPos} ${this.dragStartScoll}`)
   }
 
   convertX2Hour = scrollLeft => {
@@ -123,16 +141,24 @@ export class Dialer extends React.Component {
     return diff / 3600000
   }
 
+  subscribeScoll = () => {
+    //console.log(`ref ${this.dialerRef}`)
+    this.scrollUnsubscribe = Rx.Observable
+      .fromEvent(this.dialerRef.current, 'scroll')
+    //.subscribe(event => console.log(`scroll left ${event.target.scrollLeft}`))
+  }
+
+  unsubscribeScroll = () => {
+    this.scrollUnsubscribe()
+  }
+
   scroll = event => {
+    if (this.inDrag) return
     let newHour = this.convertX2Hour(this.dialerRef.current.scrollLeft)
-    let hourDiff = this.diffHour(newHour, this.orgCurrentHour)
-    if (hourDiff > 1 || hourDiff < -1) {
-      this.scrollByHour(-hourDiff)
-      let newHours = this.fillHours(newHour)
-      this.setState({ currentHour: newHour, hours: newHours })
-      this.props.scrollHour(newHour)
-    } else {
-      this.setState({ currentHour: newHour })
+    let hourDiff = this.diffHour(newHour, this.props.initDate)
+    if (hourDiff !== 0) {
+      console.log(`scroll hour ${hourDiff}`)
+      !this.inDrag && this.scrollByHour(-hourDiff)
       this.props.scrollHour(newHour)
     }
   }
@@ -160,11 +186,12 @@ export class Dialer extends React.Component {
       <div>
         <DialerDate currentDate={this.state.currentHour} />
         <p></p>
-        <div className='hourContainer' id='hourContainer' ref={this.dialerRef}
+        <div className='hourContainer' id='hourContainer'
           onMouseMove={this.mouseMove}
           onMouseDown={this.mouseDown}
           onMouseUp={this.mouseUp}
           onScroll={this.scroll}
+          ref={this.dialerRef}
         >
           {this.renderHours()}
         </div>
@@ -180,6 +207,8 @@ Dialer.propTypes = {
   totalHours: PropTypes.number,
   scrollHour: PropTypes.func,
   changeDate: PropTypes.func,
+  dragMoveHour: PropTypes.func,
+  dragEndHour: PropTypes.func,
 };
 
 Dialer.defaultProps = {
@@ -204,7 +233,13 @@ const mapDispatchToProps = function (dispatch, ownProps) {
     },
     changeDateHour: (newHour) => {
       dispatch(newDateHourAction(newHour));
-    }
+    },
+    dragMoveHour: (newHour) => {
+      dispatch(dragMoveHourAction(newHour));
+    },
+    dragEndHour: (newHour) => {
+      dispatch(dragEndHourAction(newHour));
+    },
   }
 }
 

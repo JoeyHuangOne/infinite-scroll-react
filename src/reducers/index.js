@@ -1,5 +1,5 @@
 import { combineReducers } from 'redux-loop';
-import { dateChange, dateHourChange, scrollHour } from '../ActionConst.js'
+import { dateChange } from '../ActionConst.js'
 
 
 const dateReducer = function (state, action) {
@@ -14,7 +14,7 @@ const dateReducer = function (state, action) {
       action.newDate.getDate())
     newState = { ...state, currentHour: newDate, changeType: action.type };
   }
-  else if (action.type === dateHourChange || action.type === scrollHour) {
+  else {
     let newDate2 = new Date(action.newDateHour)
     newState = { ...state, currentHour: newDate2, changeType: action.type };
   }
