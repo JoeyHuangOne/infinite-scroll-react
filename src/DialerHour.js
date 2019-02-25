@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types'
 import './DialerHour.css'
 import { connect } from 'react-redux'
@@ -28,7 +28,6 @@ let DialerHour = React.memo(props => {
     </div>
   )
 })
-
 
 DialerHour.propTypes = {
   currentHour: PropTypes.instanceOf(Date).isRequired,
