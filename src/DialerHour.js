@@ -1,41 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types'
 import './DialerHour.css'
 import { connect } from 'react-redux'
 import { newDateHourAction } from './actions'
 
-export class DialerHour extends React.PureComponent {
-  click = event => {
-    if (this.inDrag) return
-    this.props.changeDateHour(this.props.currentHour)
+let DialerHour = React.memo(props => {
+  let inDrag = false
+
+  function click(event) {
+    if (inDrag) return
+    props.changeDateHour(props.currentHour)
   }
 
-  mouseMove = event => {
-    this.inDrag = event.buttons >= 1
+  function mouseMove(event) {
+    inDrag = event.buttons >= 1
   }
 
-  render() {
-    let hour = new Date(this.props.currentHour).getHours()
-    return (
-      <div onClick={this.click}
-        className={'hourCell'}
-        onMouseMove={this.mouseMove}
-        style={{ width: this.props.cellWidth }}
-      >
-        <div className='hourText'>
-          {hour}
-        </div>
+  return (
+    <div onClick={click}
+      className={'hourCell'}
+      onMouseMove={mouseMove}
+      style={{ width: props.cellWidth }}
+    >
+      <div className='hourText'>
+        {new Date(props.currentHour).getHours()}
       </div>
-    );
-  }
-}
+    </div>
+  )
+})
+
 
 DialerHour.propTypes = {
   currentHour: PropTypes.instanceOf(Date).isRequired,
   cellWidth: PropTypes.string.isRequired,
   changeDateHour: PropTypes.func,
 };
-
 
 const mapDispatchToProps = function (dispatch, ownProps) {
   return {
@@ -49,4 +48,3 @@ export default connect(
   null,
   mapDispatchToProps
 )(DialerHour);
-
