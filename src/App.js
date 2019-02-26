@@ -23,7 +23,7 @@ let App = React.memo(props => {
 )
 
 const mapStateToProps = function (state) {
-  return { currentHour: state.dateReducer.currentHour };
+  return { currentHour: state.dateReducer.movingHour };
 }
 
 export default connect(
