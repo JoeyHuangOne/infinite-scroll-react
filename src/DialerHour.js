@@ -1,30 +1,30 @@
-import React, { useState } from 'react';
+import React, { useRef, useCallback } from 'react';
 import PropTypes from 'prop-types'
 import './DialerHour.css'
 import { connect } from 'react-redux'
 import { newDateHourAction } from './actions'
 
 let DialerHour = React.memo(props => {
-  const [noDrag, setNoDrag] = useState(false)
+  const noDrag = useRef()
 
-  function click(event) {
-    if (!noDrag) return
+  const memoizedClick = useCallback(event => {
+    if (!noDrag.current) return
     props.changeDateHour(props.currentHour)
-  }
+  }, []);
 
-  function mouseMove(event) {
-    setNoDrag(false)
-  }
+  const memoizedMouseDown = useCallback(event => {
+    noDrag.current = event.buttons === 1
+  }, []);
 
-  function mouseDown(event) {
-    setNoDrag(event.buttons === 1)
-  }
+  const memoizedMouseMove = useCallback(event => {
+    noDrag.current = false
+  }, []);
 
   return (
-    <div onClick={click}
+    <div onClick={memoizedClick}
       className={'hourCell'}
-      onMouseMove={mouseMove}
-      onMouseDown={mouseDown}
+      onMouseMove={memoizedMouseMove}
+      onMouseDown={memoizedMouseDown}
       style={{ width: props.cellWidth }}
     >
       <div className='hourText'>

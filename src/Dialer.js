@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useReducer } from 'react';
 import PropTypes from 'prop-types'
 import { newDateAction, newDateHourAction, scrollHourAction, dragMoveHourAction, dragEndHourAction } from './actions'
 import { connect } from 'react-redux'
@@ -6,26 +6,69 @@ import DialerHour from './DialerHour.js'
 import './Dialer.css'
 import DialerDate from "./DialerDate.js"
 
-function Dialer(props) {
+let Dialer = React.memo(props => {
   let start2currentHour = Math.floor(props.totalHours / 2)
   let visible2currentHour = Math.floor(props.visibleHours / 2)
-  let dialerRef = React.createRef();
+  let dialerRef = useRef()
 
-  const [inDrag, setInDrag] = useState(0)
-  const [dragStartHour, setDragStartHour] = useState()
-  const [dragStartPosX, setDragStartPosX] = useState()
-  const [dragStartScoll, setDragStartScoll] = useState()
-  const [addResize, setAddResize] = useState(0)
+  const inDrag = useRef(0)
+  const hours = useMemo(() => fillHours(props.initDate), [props.initDate])
+  const dragRef = useRef({})
+
+  const [resizeUpdate, forceUpdate] = useReducer(x => x + 1, 0);
+  const [resizeCenter, setResizeCenter] = useState(resizeUpdate)
+
+  useLayoutEffect(() => {
+    if (props.center || resizeUpdate !== resizeCenter) centerDialer()
+    setResizeCenter(resizeUpdate)
+  })
 
   useEffect(() => {
-    if (addResize === 0) {
-      console.log()
-      window.addEventListener("resize",
-        () => { props.changeDateHour(props.initDate) })
-      setAddResize(1)
+    function resize() {
+      forceUpdate()
     }
-    props.center && centerDialer()
-  })
+    window.addEventListener("resize", resize)
+    return () => { window.removeEventListener("resize", resize) }
+  }, [])
+
+  const savedScroll = useCallback(event => {
+    if (inDrag.current === 2) return
+    let newHour = convertX2Hour(dialerRef.current.scrollLeft)
+    let hourDiff = diffHour(newHour, props.initDate)
+    if (hourDiff !== 0) {
+      scrollByHour(-hourDiff)
+      props.scrollHour(newHour)
+    }
+  }, [props.initDate])
+
+  const mouseMove = useCallback(event => {
+    if (event.buttons !== 1) inDrag.current = 0
+    if (event.buttons === 1 && inDrag.current === 1) inDrag.current = 2
+    if (inDrag.current === 2) {
+      let mouseDiff = dragRef.current.dragStartPosX - event.clientX
+      let scroll = dragRef.current.dragStartScoll + mouseDiff
+      dialerRef.current.scrollLeft = scroll
+      let newHour = convertX2Hour(scroll)
+      props.dragMoveHour(newHour)
+    }
+  }, [props.initDate])
+
+  const mouseUp = useCallback(event => {
+    if (inDrag.current === 2) {
+      let newHour = convertX2Hour(dialerRef.current.scrollLeft)
+      let hourDiff = diffHour(newHour, dragRef.current.dragStartHour)
+      hourDiff !== 0 && scrollByHour(-hourDiff)
+      props.dragEndHour(newHour)
+    }
+    inDrag.current = 0
+  }, [props.initDate])
+
+  const mouseDown = useCallback(event => {
+    inDrag.current = event.buttons === 1 ? 1 : 0
+    dragRef.current.dragStartHour = props.initDate
+    dragRef.current.dragStartPosX = event.clientX
+    dragRef.current.dragStartScoll = dialerRef.current.scrollLeft
+  }, [props.initDate])
 
   function scrollByHour(hours) {
     let hoursWidth = dialerRef.current.clientWidth / props.visibleHours * hours
@@ -35,44 +78,6 @@ function Dialer(props) {
   function centerDialer() {
     let cellWidth = dialerRef.current.clientWidth / props.visibleHours
     dialerRef.current.scrollLeft = (start2currentHour - visible2currentHour) * cellWidth
-  }
-
-
-  function plusHour(date, hour = 0) {
-    let newDate = date.valueOf()
-    newDate += hour * 3600000
-    let retDate = new Date(newDate)
-    return retDate
-  }
-
-  function mouseMove(event) {
-    if (event.buttons !== 1) setInDrag(0)
-    if (event.buttons === 1 && inDrag === 1) setInDrag(2)
-    if (inDrag === 2) {
-      let mouseDiff = dragStartPosX - event.clientX
-      let scroll = dragStartScoll + mouseDiff
-      //console.log(`drag scroll lef ${scroll}`)
-      dialerRef.current.scrollLeft = scroll
-      let newHour = convertX2Hour(scroll)
-      props.dragMoveHour(newHour)
-    }
-  }
-
-  function mouseUp(event) {
-    if (inDrag === 2) {
-      let newHour = convertX2Hour(dialerRef.current.scrollLeft)
-      let hourDiff = diffHour(newHour, dragStartHour)
-      hourDiff !== 0 && scrollByHour(-hourDiff)
-      props.dragEndHour(newHour)
-    }
-    setInDrag(0)
-  }
-
-  function mouseDown(event) {
-    setInDrag(event.buttons === 1 ? 1 : 0)
-    setDragStartHour(props.initDate)
-    setDragStartPosX(event.clientX)
-    setDragStartScoll(dialerRef.current.scrollLeft)
   }
 
   function fillHours(currentHour) {
@@ -88,31 +93,11 @@ function Dialer(props) {
     let hourWidth = dialerRef.current.clientWidth / props.visibleHours
     let pointer = hourWidth * (props.visibleHours / 2) + scrollLeft
     let hourIdx = Math.floor(pointer / hourWidth)
-    let newHour = plusHour(props.initDate, hourIdx - start2currentHour)
+    let newHour = hours[hourIdx]
     return newHour
   }
 
-  function diffHour(newTime, orgTime) {
-    let newHour = new Date(newTime)
-    newHour.setHours(newHour.getHours(), 0, 0, 0)
-    let orgHour = new Date(orgTime)
-    orgHour.setHours(orgHour.getHours(), 0, 0, 0)
-    let diff = newHour.valueOf() - orgHour.valueOf()
-    return diff / 3600000
-  }
-
-  function scroll(event) {
-    if (inDrag === 2) return
-    let newHour = convertX2Hour(dialerRef.current.scrollLeft)
-    let hourDiff = diffHour(newHour, props.initDate)
-    if (hourDiff !== 0) {
-      scrollByHour(-hourDiff)
-      props.scrollHour(newHour)
-    }
-  }
-
   function renderHours() {
-    let hours = fillHours(props.initDate)
     let newHours = []
     let width = 100 / props.visibleHours + '%'
     hours.forEach(hour => {
@@ -127,7 +112,6 @@ function Dialer(props) {
     return newHours
   }
 
-
   return (
     <div>
       <DialerDate currentDate={props.initDate} />
@@ -136,14 +120,29 @@ function Dialer(props) {
         onMouseMove={mouseMove}
         onMouseDown={mouseDown}
         onMouseUp={mouseUp}
-        onScroll={scroll}
+        onScroll={savedScroll}
         ref={dialerRef}
       >
         {renderHours()}
       </div>
     </div>
   );
+})
 
+function plusHour(date, hour = 0) {
+  let newDate = date.valueOf()
+  newDate += hour * 3600000
+  let retDate = new Date(newDate)
+  return retDate
+}
+
+function diffHour(newTime, orgTime) {
+  let newHour = new Date(newTime)
+  newHour.setHours(newHour.getHours(), 0, 0, 0)
+  let orgHour = new Date(orgTime)
+  orgHour.setHours(orgHour.getHours(), 0, 0, 0)
+  let diff = newHour.valueOf() - orgHour.valueOf()
+  return diff / 3600000
 }
 
 Dialer.propTypes = {
@@ -155,7 +154,7 @@ Dialer.propTypes = {
   changeDate: PropTypes.func,
   dragMoveHour: PropTypes.func,
   dragEndHour: PropTypes.func,
-};
+}
 
 Dialer.defaultProps = {
   visibleHours: 11,
