@@ -5,6 +5,7 @@ import { connect } from 'react-redux'
 import DialerHour from './DialerHour.js'
 import './Dialer.css'
 import DialerDate from "./DialerDate.js"
+import * as Rx from 'rxjs/Rx';
 
 let Dialer = React.memo(props => {
   let start2currentHour = Math.floor(props.totalHours / 2)
@@ -14,6 +15,7 @@ let Dialer = React.memo(props => {
   const inDrag = useRef(0)
   const hours = useMemo(() => fillHours(props.initDate), [props.initDate])
   const dragRef = useRef({})
+  const scrollRx = useRef(null)
 
   const [resizeUpdate, forceUpdate] = useReducer(x => x + 1, 0);
   const [resizeCenter, setResizeCenter] = useState(resizeUpdate)
@@ -31,14 +33,36 @@ let Dialer = React.memo(props => {
     return () => { window.removeEventListener("resize", resize) }
   }, [])
 
-  const savedScroll = useCallback(event => {
-    if (inDrag.current === 2) return
-    let newHour = convertX2Hour(dialerRef.current.scrollLeft)
-    let hourDiff = diffHour(newHour, props.initDate)
-    if (hourDiff !== 0) {
-      scrollByHour(-hourDiff)
-      props.scrollHour(newHour)
+  useEffect(() => {
+    if (!scrollRx.current) {
+      scrollRx.current = Rx.Observable
+        .fromEvent(dialerRef.current, 'scroll')
+        .debounce(() => Rx.Observable.interval(60))
+        .subscribe(event => {
+          console.log(`scroll rx ${Date.now()} ${event.target.scrollLeft} ${props.initDate}`)
+          if (inDrag.current === 2) return
+          let newHour = convertX2Hour(event.target.scrollLeft)
+          let hourDiff = diffHour(newHour, props.initDate)
+          if (hourDiff !== 0) {
+            console.log(`rx counter ${-hourDiff} ${newHour}`)
+            scrollByHour(-hourDiff)
+            props.scrollHour(newHour)
+          }
+        });
     }
+    return () => { scrollRx.current.unsubscribe(); scrollRx.current = null }
+  }, [props.initDate])
+
+  const savedScroll = useCallback(event => {
+    console.log(`scroll cb ${Date.now()} ${event.target.scrollLeft}`)
+    /*    if (inDrag.current === 2) return
+        let newHour = convertX2Hour(dialerRef.current.scrollLeft)
+        let hourDiff = diffHour(newHour, props.initDate)
+        if (hourDiff !== 0) {
+          scrollByHour(-hourDiff)
+          props.scrollHour(newHour)
+        }
+        */
   }, [props.initDate])
 
   const mouseMove = useCallback(event => {
@@ -73,6 +97,7 @@ let Dialer = React.memo(props => {
   function scrollByHour(hours) {
     let hoursWidth = dialerRef.current.clientWidth / props.visibleHours * hours
     dialerRef.current.scrollLeft += hoursWidth
+    console.log(`set left ${dialerRef.current.scrollLeft}`)
   }
 
   function centerDialer() {
