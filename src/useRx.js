@@ -1,18 +1,10 @@
-import { useState, useRef } from 'react';
+import { useRef } from 'react';
 import * as Rx from 'rxjs/Rx';
 
 function useRxRef(initVal) {
-  var subject = new Rx.BehaviorSubject(initVal)
+  var subject = new Rx.BehaviorSubject(initVal).distinctUntilChanged()
   const subjectRef = useRef(subject)
-  const [valState, setState] = useState(initVal)
-  function rxNext(nextVal) {
-    if (valState !== nextVal) {
-      console.log(`next ${nextVal}`)
-      setState(nextVal)
-      subjectRef.current.next(nextVal)
-    }
-  }
-  return [subjectRef, rxNext]
+  return [subjectRef, nextVal => subjectRef.current.next(nextVal)]
 }
 
 export default useRxRef

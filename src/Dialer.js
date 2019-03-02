@@ -43,17 +43,12 @@ let Dialer = React.memo(props => {
         .throttleTime(15)
         .withLatestFrom(initDateRxRef.current)
         .subscribe(events => {
-          let event = events[0]
-          let initDate = events[1]
-          //console.log(`scroll rx ${event.target.scrollLeft} ${initDate}`)
+          let event = events[0], initDate = events[1]
           if (inDrag.current === 2) return
           let newHour = convertX2Hour(event.target.scrollLeft, initDate)
           let hourDiff = diffHour(newHour, initDate)
-          if (hourDiff !== 0) {
-            //console.log(`rx counter ${-hourDiff} ${newHour}`)
-            scrollByHour(-hourDiff)
-            props.scrollHour(newHour)
-          }
+          scrollByHour(-hourDiff)
+          props.scrollHour(newHour)
         });
     }
     return () => {
@@ -61,18 +56,6 @@ let Dialer = React.memo(props => {
       scrollRx.current = null
     }
   }, [])
-
-  const savedScroll = useCallback(event => {
-    //console.log(`scroll cb ${Date.now()} ${event.target.scrollLeft}`)
-    /*    if (inDrag.current === 2) return
-        let newHour = convertX2Hour(dialerRef.current.scrollLeft)
-        let hourDiff = diffHour(newHour, props.initDate)
-        if (hourDiff !== 0) {
-          scrollByHour(-hourDiff)
-          props.scrollHour(newHour)
-        }
-        */
-  }, [props.initDate])
 
   const mouseMove = useCallback(event => {
     if (event.buttons !== 1) inDrag.current = 0
@@ -106,7 +89,6 @@ let Dialer = React.memo(props => {
   function scrollByHour(hours) {
     let hoursWidth = dialerRef.current.clientWidth / props.visibleHours * hours
     dialerRef.current.scrollLeft += hoursWidth
-    console.log(`set left ${dialerRef.current.scrollLeft}`)
   }
 
   function centerDialer() {
@@ -127,7 +109,7 @@ let Dialer = React.memo(props => {
     let hourWidth = dialerRef.current.clientWidth / props.visibleHours
     let pointer = hourWidth * (props.visibleHours / 2) + scrollLeft
     let hourIdx = Math.floor(pointer / hourWidth)
-    let newHour = plusHour(currentHour, hourIdx - start2currentHour)//hours[hourIdx]
+    let newHour = plusHour(currentHour, hourIdx - start2currentHour)
     return newHour
   }
 
@@ -154,7 +136,6 @@ let Dialer = React.memo(props => {
         onMouseMove={mouseMove}
         onMouseDown={mouseDown}
         onMouseUp={mouseUp}
-        onScroll={savedScroll}
         ref={dialerRef}
       >
         {renderHours()}
