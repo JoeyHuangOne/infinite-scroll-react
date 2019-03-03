@@ -18,6 +18,8 @@ let Dialer = React.memo(props => {
   const hours = useMemo(() => fillHours(props.initDate), [props.initDate])
   const dragRef = useRef({})
   const scrollRx = useRef(null)
+  const mouseMoveRxRef = useRef(null)
+  const dragRxRef = useRef(null)
 
   const [resizeUpdate, forceUpdate] = useReducer(x => x + 1, 0);
   const [resizeCenter, setResizeCenter] = useState(resizeUpdate)
@@ -36,55 +38,77 @@ let Dialer = React.memo(props => {
     return () => { window.removeEventListener("resize", resize) }
   }, [])
 
+  //for scroll
   useEffect(() => {
-    if (!scrollRx.current) {
-      scrollRx.current = Rx.Observable
-        .fromEvent(dialerRef.current, 'scroll')
-        .throttleTime(15)
-        .withLatestFrom(initDateRxRef.current)
-        .subscribe(events => {
-          let event = events[0], initDate = events[1]
-          if (inDrag.current === 2) return
-          let newHour = convertX2Hour(event.target.scrollLeft, initDate)
-          let hourDiff = diffHour(newHour, initDate)
-          scrollByHour(-hourDiff)
-          props.scrollHour(newHour)
-        });
-    }
+    if (scrollRx.current) return
+
+    let mouseUp = Rx.Observable.fromEvent(dialerRef.current, 'mouseup')
+    let mouseDown = Rx.Observable
+      .fromEvent(dialerRef.current, 'mousedown')
+    let mouseUpDwon = Rx.Observable.merge(mouseDown, mouseUp).startWith({})
+    scrollRx.current = Rx.Observable
+      .fromEvent(dialerRef.current, 'scroll')
+      .throttleTime(15)
+      .withLatestFrom(initDateRxRef.current, mouseUpDwon)
+      .subscribe(events => {
+        let event = events[0], initDate = events[1]
+        let mouseUpDown = events[2]
+        if (mouseUpDown.buttons === 1 && mouseUpDown.type === 'mousedown') return
+        let newHour = convertX2Hour(event.target.scrollLeft, initDate)
+        let hourDiff = diffHour(newHour, initDate)
+        scrollByHour(-hourDiff)
+        props.scrollHour(newHour)
+      });
+
     return () => {
       scrollRx.current.unsubscribe();
       scrollRx.current = null
     }
   }, [])
 
-  const mouseMove = useCallback(event => {
-    if (event.buttons !== 1) inDrag.current = 0
-    if (event.buttons === 1 && inDrag.current === 1) inDrag.current = 2
-    if (inDrag.current === 2) {
-      let mouseDiff = dragRef.current.dragStartPosX - event.clientX
-      let scroll = dragRef.current.dragStartScoll + mouseDiff
-      dialerRef.current.scrollLeft = scroll
-      let newHour = convertX2Hour(scroll, props.initDate)
-      props.dragMoveHour(newHour)
-    }
-  }, [props.initDate])
+  // for drag
+  useEffect(() => {
+    if (dragRxRef.current) return
 
-  const mouseUp = useCallback(event => {
-    if (inDrag.current === 2) {
-      let newHour = convertX2Hour(dialerRef.current.scrollLeft, props.initDate)
-      let hourDiff = diffHour(newHour, dragRef.current.dragStartHour)
-      hourDiff !== 0 && scrollByHour(-hourDiff)
-      props.dragEndHour(newHour)
-    }
-    inDrag.current = 0
-  }, [props.initDate])
+    let mouseUp = Rx.Observable.fromEvent(dialerRef.current, 'mouseup')
+    let mouseDown = Rx.Observable
+      .fromEvent(dialerRef.current, 'mousedown')
+    Rx.Observable.merge(mouseDown, mouseUp)
+      .withLatestFrom(initDateRxRef.current)
+      .subscribe(events => {
+        let event = events[0]
+        if (event.type === 'mousedown' && event.buttons === 1) {
+          let dragStartHour = events[1]
+          let dragStartPosX = event.clientX
+          let dragStartScoll = dialerRef.current.scrollLeft
+          mouseMoveRxRef.current = Rx.Observable
+            .fromEvent(dialerRef.current, 'mousemove')
+            .throttleTime(15)
+            .subscribe(event => {
+              if (event.buttons !== 1) {
+                mouseMoveRxRef.current.unsubscribe()
+                mouseMoveRxRef.current = null
+              }
+              else {
+                let mouseDiff = dragStartPosX - event.clientX
+                let scroll = dragStartScoll + mouseDiff
+                dialerRef.current.scrollLeft = scroll
+                let newHour = convertX2Hour(scroll, dragStartHour)
+                props.dragMoveHour(newHour)
+              }
+            })
+        } else if (event.type === 'mouseup') {
+          mouseMoveRxRef.current.unsubscribe()
+          mouseMoveRxRef.current = null
+        }
+      })
 
-  const mouseDown = useCallback(event => {
-    inDrag.current = event.buttons === 1 ? 1 : 0
-    dragRef.current.dragStartHour = props.initDate
-    dragRef.current.dragStartPosX = event.clientX
-    dragRef.current.dragStartScoll = dialerRef.current.scrollLeft
-  }, [props.initDate])
+    return () => {
+      dragRxRef.current.unsubscribe();
+      dragRxRef.current = null
+    }
+  }, [])
+
 
   function scrollByHour(hours) {
     let hoursWidth = dialerRef.current.clientWidth / props.visibleHours * hours
@@ -133,9 +157,9 @@ let Dialer = React.memo(props => {
       <DialerDate currentDate={props.initDate} />
       <p></p>
       <div className='hourContainer' id='hourContainer'
-        onMouseMove={mouseMove}
-        onMouseDown={mouseDown}
-        onMouseUp={mouseUp}
+        //onMouseMove={mouseMove}
+        //onMouseDown={mouseDown}
+        //onMouseUp={mouseUp}
         ref={dialerRef}
       >
         {renderHours()}
