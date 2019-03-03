@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useCallback, useReducer } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useMemo, useRef, useReducer } from 'react';
 import PropTypes from 'prop-types'
 import { newDateAction, newDateHourAction, scrollHourAction, dragMoveHourAction, dragEndHourAction } from './actions'
 import { connect } from 'react-redux'
@@ -14,9 +14,7 @@ let Dialer = React.memo(props => {
   let dialerRef = useRef()
 
   const [initDateRxRef, initDateRxNext] = useRxRef(props.initDate)
-  const inDrag = useRef(0)
   const hours = useMemo(() => fillHours(props.initDate), [props.initDate])
-  const dragRef = useRef({})
   const scrollRx = useRef(null)
   const mouseMoveRxRef = useRef(null)
   const dragRxRef = useRef(null)
@@ -43,8 +41,7 @@ let Dialer = React.memo(props => {
     if (scrollRx.current) return
 
     let mouseUp = Rx.Observable.fromEvent(dialerRef.current, 'mouseup')
-    let mouseDown = Rx.Observable
-      .fromEvent(dialerRef.current, 'mousedown')
+    let mouseDown = Rx.Observable.fromEvent(dialerRef.current, 'mousedown')
     let mouseUpDwon = Rx.Observable.merge(mouseDown, mouseUp).startWith({})
     scrollRx.current = Rx.Observable
       .fromEvent(dialerRef.current, 'scroll')
