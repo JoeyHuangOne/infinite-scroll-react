@@ -22,6 +22,7 @@ let Dialer = React.memo(props => {
   const hours = fillHours(props.initDate)
   const hourChildren = renderHours(hours)
 
+  const scrollFromResize = useRef(false)
   const scrollRx = useRef(null)
   const mouseMoveRxRef = useRef(null)
   const dragRxRef = useRef(null)
@@ -37,6 +38,7 @@ let Dialer = React.memo(props => {
       .throttleTime(eventThrottle)
       .withLatestFrom(initDateRxRef.current)
       .subscribe(event => {
+        scrollFromResize.current = true
         props.changeDateHour(event[1])
       })
     return () => {
@@ -51,15 +53,19 @@ let Dialer = React.memo(props => {
     let mouseUp = Rx.Observable.fromEvent(dialerRef.current, 'mouseup'),
       mouseDown = Rx.Observable.fromEvent(dialerRef.current, 'mousedown'),
       resizeRx = Rx.Observable.fromEvent(window, 'resize'),
-      mouseUpDwon = Rx.Observable.merge(mouseDown, mouseUp, resizeRx).startWith({})
+      mouseUpDwon = Rx.Observable.merge(mouseDown, mouseUp, resizeRx)
+        .startWith({})
     scrollRx.current = Rx.Observable
       .fromEvent(dialerRef.current, 'scroll')
       .throttleTime(eventThrottle)
       .withLatestFrom(initDateRxRef.current, mouseUpDwon)
       .subscribe(events => {
         let event = events[0], initDate = events[1], mouseUpDown = events[2]
-        if ((mouseUpDown.buttons === 1 && mouseUpDown.type === 'mousedown')
-          || mouseUpDown.type === 'resize') return
+        if (mouseUpDown.type === 'resize' && scrollFromResize.current) {
+          scrollFromResize.current = false
+          return
+        }
+        if (mouseUpDown.buttons === 1 && mouseUpDown.type === 'mousedown') return
         let newCenterHour = counterScroll(event.target.scrollLeft, initDate)
         props.scrollHour(newCenterHour)
       });
