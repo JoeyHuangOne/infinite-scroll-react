@@ -8,4 +8,3 @@ export const scrollHourAction = (newDateHour) => ({ type: scrollHour, newDateHou
 
 export const dragMoveHourAction = (newDateHour) => ({ type: dragMoveHour, newDateHour })
 
-export const dragEndHourAction = (newDateHour) => ({ type: dragEndHour, newDateHour })
