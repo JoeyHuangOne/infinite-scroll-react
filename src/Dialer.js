@@ -16,84 +16,71 @@ let Dialer = React.memo(props => {
   let visible2currentHour = Math.floor(props.visibleHours / 2)
   let dialerRef = useRef()
 
-  const [initDateRxRef, initDateRxNext] = useRxRef(props.initDate)
-  initDateRxNext(props.initDate)
-
   const hours = fillHours(props.initDate)
   const hourChildren = renderHours(hours)
 
-  const scrollRx = useRef(null)
-  const mouseMoveRxRef = useRef(null)
-  const dragRxRef = useRef(null)
-  const resizeRxRef = useRef(null)
-  const shareResize = useRef(null)
-
   useLayoutEffect(() => { props.center && centerDialer() })
 
-  useEffect(() => { //for resize event
-    if (shareResize.current) return
-
-    shareResize.current = Rx.Observable
-      .fromEvent(window, 'resize')
-      .share()
-
-    resizeRxRef.current = shareResize.current
-      .throttleTime(eventThrottle)
-      .withLatestFrom(initDateRxRef.current)
-      .subscribe(event => {
-        //scrollFromResize.current = true
-        props.changeDateHour(event[1])
-      })
-    return () => {
-      resizeRxRef.current && resizeRxRef.current.unsubscribe()
-      resizeRxRef.current = null
-    }
-  }, [])
-
   const toggleResizeObserveRef = useRef()
-  useEffect(() => { //for scroll event
-    if (scrollRx.current) return
+  useEffect(() => {
+    if (toggleResizeObserveRef.current) return
+
+    let resizeRx = Rx.Observable.fromEvent(window, 'resize').share()
+    let mouseUpRx = Rx.Observable.fromEvent(dialerRef.current, 'mouseup').share()
+    let mouseDownRx = Rx.Observable.fromEvent(dialerRef.current, 'mousedown').share()
+    let scrollRx = Rx.Observable.fromEvent(dialerRef.current, 'scroll').share()
 
     var toggleResize = Rx.Observable.create(observer => {
       toggleResizeObserveRef.current = observer
-      Rx.Observable.fromEvent(window, 'resize')
-        .subscribe(event => {
-          observer.next(event);
-        })
+      resizeRx.subscribe(event => { observer.next(event) })
     })
-
-    let mouseUp = Rx.Observable.fromEvent(dialerRef.current, 'mouseup'),
-      mouseDown = Rx.Observable.fromEvent(dialerRef.current, 'mousedown')
-    let mouseUpDwon = Rx.Observable.merge(mouseDown, mouseUp, toggleResize)
+    let mouseUpDwonResize = Rx.Observable.merge(mouseDownRx, mouseUpRx, toggleResize)
       .startWith({})
 
-    scrollRx.current = Rx.Observable
-      .fromEvent(dialerRef.current, 'scroll')
+    let scrollSubscript = handleScroll(scrollRx, mouseUpDwonResize)
+    let resizeSubscript = handleResize(resizeRx)
+    let dragSubscript = handleDrag(mouseDownRx, mouseUpRx)
+
+    return () => {
+      resizeSubscript.unsubscribe()
+      scrollSubscript.unsubscribe()
+      dragSubscript.unsubscribe()
+      toggleResizeObserveRef.current = null
+    }
+  }, [])
+
+  const [initDateRxRef, initDateRxNext] = useRxRef(props.initDate)
+  initDateRxNext(props.initDate)
+  function handleResize(shareResizeRx) {
+    let resizeSubscript = shareResizeRx
       .throttleTime(eventThrottle)
-      .withLatestFrom(initDateRxRef.current, mouseUpDwon)
+      .withLatestFrom(initDateRxRef.current)
+      .subscribe(event => {
+        props.changeDateHour(event[1])
+      })
+    return resizeSubscript
+  }
+
+  function handleScroll(scrollRx, mouseUpDwonResize) {
+    let scrollSubscript = scrollRx
+      .throttleTime(eventThrottle)
+      .withLatestFrom(initDateRxRef.current, mouseUpDwonResize)
       .subscribe(events => {
         let event = events[0], initDate = events[1], mouseUpDown = events[2]
-        if (mouseUpDown.type === 'resize') {
-          toggleResizeObserveRef.current.next({})
+        if (mouseUpDown.type === 'resize') { // scroll triggered by resize so skip it
+          toggleResizeObserveRef.current.next({}) // so scroll works after resize
           return
         }
         if (mouseUpDown.buttons === 1 && mouseUpDown.type === 'mousedown') return
         let newCenterHour = counterScroll(event.target.scrollLeft, initDate)
         props.scrollHour(newCenterHour)
-      });
+      })
+    return scrollSubscript
+  }
 
-    return () => {
-      scrollRx.current.unsubscribe()
-      scrollRx.current = null
-    }
-  }, [])
-
-  useEffect(() => { // for drag event
-    if (dragRxRef.current) return
-
-    let mouseUp = Rx.Observable.fromEvent(dialerRef.current, 'mouseup'),
-      mouseDown = Rx.Observable.fromEvent(dialerRef.current, 'mousedown')
-    Rx.Observable.merge(mouseDown, mouseUp)
+  const mouseMoveRxRef = useRef(null)
+  function handleDrag(mouseDown, mouseUp) {
+    let dragSubscript = Rx.Observable.merge(mouseDown, mouseUp)
       .withLatestFrom(initDateRxRef.current)
       .subscribe(events => {
         let event = events[0], dragStartHour = events[1]
@@ -124,13 +111,8 @@ let Dialer = React.memo(props => {
           props.scrollHour(newCenterHour)
         }
       })
-
-    return () => {
-      dragRxRef.current && dragRxRef.current.unsubscribe();
-      dragRxRef.current = null
-    }
-  }, [])
-
+    return dragSubscript
+  }
 
   function scrollByHour(hours) {
     let hoursWidth = dialerRef.current.clientWidth / props.visibleHours * hours
