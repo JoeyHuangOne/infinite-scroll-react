@@ -7,4 +7,5 @@ function useRxRef(initVal) {
   return [subjectRef, nextVal => subjectRef.current.next(nextVal)]
 }
 
-export default useRxRef
+
+export { useRxRef } 

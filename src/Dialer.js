@@ -6,7 +6,7 @@ import DialerHour from './DialerHour.js'
 import './Dialer.css'
 import DialerDate from "./DialerDate.js"
 import * as Rx from 'rxjs/Rx';
-import useRxRef from './useRx.js'
+import { useRxRef } from './useRx.js'
 
 const eventThrottle = 15
 const hourInMs = 3600000
@@ -22,23 +22,26 @@ let Dialer = React.memo(props => {
   const hours = fillHours(props.initDate)
   const hourChildren = renderHours(hours)
 
-  const scrollFromResize = useRef(false)
   const scrollRx = useRef(null)
   const mouseMoveRxRef = useRef(null)
   const dragRxRef = useRef(null)
   const resizeRxRef = useRef(null)
+  const shareResize = useRef(null)
 
   useLayoutEffect(() => { props.center && centerDialer() })
 
   useEffect(() => { //for resize event
-    if (resizeRxRef.current) return
+    if (shareResize.current) return
 
-    resizeRxRef.current = Rx.Observable
+    shareResize.current = Rx.Observable
       .fromEvent(window, 'resize')
+      .share()
+
+    resizeRxRef.current = shareResize.current
       .throttleTime(eventThrottle)
       .withLatestFrom(initDateRxRef.current)
       .subscribe(event => {
-        scrollFromResize.current = true
+        //scrollFromResize.current = true
         props.changeDateHour(event[1])
       })
     return () => {
@@ -47,22 +50,31 @@ let Dialer = React.memo(props => {
     }
   }, [])
 
+  const toggleResizeObserveRef = useRef()
   useEffect(() => { //for scroll event
     if (scrollRx.current) return
 
+    var toggleResize = Rx.Observable.create(observer => {
+      toggleResizeObserveRef.current = observer
+      Rx.Observable.fromEvent(window, 'resize')
+        .subscribe(event => {
+          observer.next(event);
+        })
+    })
+
     let mouseUp = Rx.Observable.fromEvent(dialerRef.current, 'mouseup'),
-      mouseDown = Rx.Observable.fromEvent(dialerRef.current, 'mousedown'),
-      resizeRx = Rx.Observable.fromEvent(window, 'resize'),
-      mouseUpDwon = Rx.Observable.merge(mouseDown, mouseUp, resizeRx)
-        .startWith({})
+      mouseDown = Rx.Observable.fromEvent(dialerRef.current, 'mousedown')
+    let mouseUpDwon = Rx.Observable.merge(mouseDown, mouseUp, toggleResize)
+      .startWith({})
+
     scrollRx.current = Rx.Observable
       .fromEvent(dialerRef.current, 'scroll')
       .throttleTime(eventThrottle)
       .withLatestFrom(initDateRxRef.current, mouseUpDwon)
       .subscribe(events => {
         let event = events[0], initDate = events[1], mouseUpDown = events[2]
-        if (mouseUpDown.type === 'resize' && scrollFromResize.current) {
-          scrollFromResize.current = false
+        if (mouseUpDown.type === 'resize') {
+          toggleResizeObserveRef.current.next({})
           return
         }
         if (mouseUpDown.buttons === 1 && mouseUpDown.type === 'mousedown') return
