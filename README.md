@@ -1,5 +1,10 @@
 infinite dailer/scrolling in React (and jquery in jquery folder).
 
+Rx branch implement event handler with Rx observable with throttle.
+
+Master branch did not use Rx nor event throttle.
+
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
