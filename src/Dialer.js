@@ -5,7 +5,8 @@ import { connect } from 'react-redux'
 import DialerHour from './DialerHour.js'
 import './Dialer.css'
 import DialerDate from "./DialerDate.js"
-import * as Rx from 'rxjs/Rx';
+import * as Rx from 'rxjs/Rx'
+import { throttleTime, withLatestFrom } from 'rxjs/operators'
 import { useRxRef } from './useRx.js'
 
 const eventThrottle = 15
@@ -53,9 +54,10 @@ let Dialer = React.memo(props => {
   initDateRxNext(props.initDate)
   function handleResize(shareResizeRx) {
     let resizeSubscript = shareResizeRx
-      .throttleTime(eventThrottle)
-      .withLatestFrom(initDateRxRef.current)
-      .subscribe(event => {
+      .pipe(
+        throttleTime(eventThrottle),
+        withLatestFrom(initDateRxRef.current)
+      ).subscribe(event => {
         props.changeDateHour(event[1])
       })
     return resizeSubscript
@@ -63,9 +65,10 @@ let Dialer = React.memo(props => {
 
   function handleScroll(scrollRx, mouseUpDwonResize) {
     let scrollSubscript = scrollRx
-      .throttleTime(eventThrottle)
-      .withLatestFrom(initDateRxRef.current, mouseUpDwonResize)
-      .subscribe(events => {
+      .pipe(
+        throttleTime(eventThrottle),
+        withLatestFrom(initDateRxRef.current, mouseUpDwonResize)
+      ).subscribe(events => {
         let event = events[0], initDate = events[1], mouseUpDown = events[2]
         if (mouseUpDown.type === 'resize') { // scroll triggered by resize so skip it
           toggleResizeObserveRef.current.next({}) // so scroll works after resize
