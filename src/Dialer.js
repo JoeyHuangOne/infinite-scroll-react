@@ -46,6 +46,7 @@ let Dialer = React.memo(props => {
       resizeSubscript.unsubscribe()
       scrollSubscript.unsubscribe()
       dragSubscript.unsubscribe()
+      toggleResizeObserveRef.current && toggleResizeObserveRef.current.unsubscribe()
       toggleResizeObserveRef.current = null
     }
   }, [])
