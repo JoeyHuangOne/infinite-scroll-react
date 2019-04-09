@@ -5,6 +5,7 @@ import { connect } from 'react-redux'
 import DatePicker from "react-datepicker"
 import "react-datepicker/dist/react-datepicker.css"
 
+// test git fork merge from br1
 class DialerDate extends React.PureComponent {
   constructor(props) {
     super(props);
