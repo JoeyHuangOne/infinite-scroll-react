@@ -1,3 +1,5 @@
+update for be1
+
 infinite dailer/scrolling in React (and jquery in jquery folder).
 
 Rx branch implement event handler with Rx observable with throttle.
