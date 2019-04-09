@@ -6,6 +6,7 @@ import DialerHour from './DialerHour.js'
 import './Dialer.css'
 import DialerDate from "./DialerDate.js"
 
+// update from one br2
 let Dialer = React.memo(props => {
   let start2currentHour = Math.floor(props.totalHours / 2)
   let visible2currentHour = Math.floor(props.visibleHours / 2)
