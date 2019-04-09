@@ -1,4 +1,4 @@
-upstream update 1
+upstream update 1/2
 
 
 infinite dailer/scrolling in React (and jquery in jquery folder).
