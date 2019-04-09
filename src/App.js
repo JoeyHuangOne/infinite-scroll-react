@@ -4,6 +4,7 @@ import Dialer from "./Dialer.js";
 import { connect } from 'react-redux'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+// test for git fork merge
 let App = React.memo(props => {
   let hourStr
   if (props.currentHour) {
