@@ -4,6 +4,7 @@ import './DialerHour.css'
 import { connect } from 'react-redux'
 import { newDateHourAction } from './actions'
 
+// new commit from 1 again
 let DialerHour = React.memo(props => {
   const noDrag = useRef()
 
