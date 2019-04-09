@@ -1,4 +1,5 @@
-update for be1
+upstream update 1/2/3 and br1
+
 
 infinite dailer/scrolling in React (and jquery in jquery folder).
 
