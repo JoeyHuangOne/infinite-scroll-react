@@ -5,3 +5,4 @@ const dragMoveHour = 'DRAG_MOVE_HOUR'
 const dragEndHour = 'DRAG_END_HOUR'
 
 export { dateChange, dateHourChange, scrollHour, dragMoveHour, dragEndHour }
+// test for git fork merge
