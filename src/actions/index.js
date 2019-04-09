@@ -1,4 +1,4 @@
-import { dateChange, dateHourChange, scrollHour, dragMoveHour, dragEndHour } from '../ActionConst.js'
+import { dateChange, dateHourChange, scrollHour, dragMoveHour } from '../ActionConst.js'
 
 export const newDateAction = (newDate) => ({ type: dateChange, newDate })
 
@@ -8,4 +8,4 @@ export const scrollHourAction = (newDateHour) => ({ type: scrollHour, newDateHou
 
 export const dragMoveHourAction = (newDateHour) => ({ type: dragMoveHour, newDateHour })
 
-export const dragEndHourAction = (newDateHour) => ({ type: dragEndHour, newDateHour })
+// new test from 1

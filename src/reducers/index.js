@@ -1,7 +1,7 @@
 import { combineReducers } from 'redux-loop';
 import { dateChange, dateHourChange, dragMoveHour } from '../ActionConst.js'
 
-
+// new test from 1
 const dateReducer = function (state, action) {
   let newState = state
   if (state === undefined) {
